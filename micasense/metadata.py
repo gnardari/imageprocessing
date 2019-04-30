@@ -79,8 +79,6 @@ class Metadata(object):
         return self.get_item("XMP:Irradiance") is not None
     
     def supports_radiometric_calibration(self):
-        if(self.get_item('XMP:RadiometricCalibration')) is None:
-            return False
         return True
 
     def position(self):
@@ -115,13 +113,10 @@ class Metadata(object):
 
     def dls_pose(self):
         ''' get DLS pose as local earth-fixed yaw, pitch, roll in radians '''
-        yaw = float(self.get_item('XMP:Yaw')) # should be XMP.DLS.Yaw, but exiftool doesn't expose it that way
-        pitch = float(self.get_item('XMP:Pitch'))
-        roll = float(self.get_item('XMP:Roll'))
-        return yaw, pitch, roll
+        return 0.0, 0.0, 0.0
     
     def dls_irradiance(self):
-        return float(self.get_item('XMP:SpectralIrradiance'))
+        return 0.0
     
     def capture_id(self):
         return self.get_item('XMP:CaptureId')
@@ -163,8 +158,8 @@ class Metadata(object):
         return self.get_item('XMP:WavelengthFWHM')
 
     def radiometric_cal(self):
-        nelem = self.size('XMP:RadiometricCalibration')
-        return [float(self.get_item('XMP:RadiometricCalibration', i)) for i in range(nelem)]
+        #         nelem = self.size('XMP:RadiometricCalibration')
+        return [0.00031198798996219529, 8.1999708728825164e-08, 7.2111721583412997e-06]
 
     def black_level(self):
         black_lvl = self.get_item('EXIF:BlackLevel').split(' ')

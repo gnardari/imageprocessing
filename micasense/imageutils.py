@@ -82,13 +82,15 @@ def align(pair):
             gradient(pair['match_image']),
             warp_matrix,
             warp_mode,
-            criteria)
+            criteria,
+            inputMask=None,
+            gaussFiltSize=5)
 
     return {'ref_index': pair['ref_index'],
             'match_index': pair['match_index'],
             'warp_matrix': warp_matrix }
 
-def align_capture(capture, ref_index=4, warp_mode=cv2.MOTION_AFFINE, max_iterations=2500, epsilon_threshold=1e-9):
+def align_capture(capture, ref_index=4, warp_mode=cv2.MOTION_HOMOGRAPHY, max_iterations=2500, epsilon_threshold=1e-9):
     '''Align images in a capture using openCV
     MOTION_TRANSLATION sets a translational motion model; warpMatrix is 2x3 with the first 2x2 part being the unity matrix and the rest two parameters being estimated.
     MOTION_EUCLIDEAN sets a Euclidean (rigid) transformation as motion model; three parameters are estimated; warpMatrix is 2x3.
@@ -259,15 +261,29 @@ def min_max(pts):
             bounds.min.y = p[1]
     return bounds
 
-def map_points(pts, image_size, affine, distortion_coeffs, camera_matrix):
+def map_points(pts, image_size, warpMatrix, distortion_coeffs, camera_matrix,warp_mode=cv2.MOTION_HOMOGRAPHY):
     #assert len(affine) == 6, "affine must have len == 6, has len {}".format(len(affine))
 
     # extra dimension makes opencv happy
     pts = np.array([pts], dtype=np.float)
-    
+
     new_cam_mat, _ = cv2.getOptimalNewCameraMatrix(camera_matrix, distortion_coeffs, image_size, 1)
     new_pts = cv2.undistortPoints(pts, camera_matrix, distortion_coeffs, P=new_cam_mat)
-
-    new_pts = cv2.transform(new_pts, cv2.invertAffineTransform(affine))
-
+    if warp_mode == cv2.MOTION_AFFINE:
+        new_pts = cv2.transform(new_pts, cv2.invertAffineTransform(warpMatrix))
+    if warp_mode == cv2.MOTION_HOMOGRAPHY:
+        new_pts =cv2.perspectiveTransform(new_pts,np.linalg.inv(warpMatrix).astype(np.float32))
     return new_pts[0]
+
+# def map_points(pts, image_size, affine, distortion_coeffs, camera_matrix):
+#     #assert len(affine) == 6, "affine must have len == 6, has len {}".format(len(affine))
+
+#     # extra dimension makes opencv happy
+#     pts = np.array([pts], dtype=np.float)
+    
+#     new_cam_mat, _ = cv2.getOptimalNewCameraMatrix(camera_matrix, distortion_coeffs, image_size, 1)
+#     new_pts = cv2.undistortPoints(pts, camera_matrix, distortion_coeffs, P=new_cam_mat)
+
+#     new_pts = cv2.transform(new_pts, cv2.invertAffineTransform(affine))
+
+#     return new_pts[0]
